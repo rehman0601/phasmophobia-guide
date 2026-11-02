@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="8" fill="#0B0E0A"/>
+  <rect x="10" y="10" width="44" height="44" rx="3" fill="none" stroke="#A3C979" stroke-width="2"/>
+  <text x="32" y="42" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="16" font-weight="700" fill="#DFE5D4" letter-spacing="2">DEAD</text>
+  <circle cx="56" cy="10" r="3" fill="#C2564A">
+    <animate attributeName="opacity" values="1;0.2;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+</svg>
