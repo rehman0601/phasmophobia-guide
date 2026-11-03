@@ -105,11 +105,14 @@ export function getCandidates(
     const subCount = Math.min(mainShown, mainArr.length);
     const mainSubsets = genSubsetsOfSize(mainArr, subCount);
 
-    // Guaranteed evidence must appear in every observable subset (if present)
+    // Guaranteed evidence applies only when at least one main evidence is shown.
+    // At custom 0, no evidence is visible, so forced evidence does not appear either.
+    const guaranteed = mainShown > 0 ? config.guaranteedEvidence : null;
+
     if (config.extraEvidence.size === 0) {
       // Non-Mimic: observable is just main subsets (guaranteed constrained)
       for (const s of mainSubsets) {
-        if (config.guaranteedEvidence !== null && !s.has(config.guaranteedEvidence)) continue;
+        if (guaranteed !== null && !s.has(guaranteed)) continue;
         subsets.push(s);
       }
     } else {

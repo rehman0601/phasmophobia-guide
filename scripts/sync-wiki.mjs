@@ -1,7 +1,3 @@
-import { writeFile } from 'node:fs/promises';
-import { createReadStream } from 'node:fs';
-import { resolve } from 'node:path';
-
 const GHOSTS = [
   'Aswang', 'Banshee', 'Dayan', 'Deildegast', 'Demon', 'Deogen',
   'Gallu', 'Goryo', 'Hantu', 'Jinn', 'Kormos', 'Mare', 'Moroi',

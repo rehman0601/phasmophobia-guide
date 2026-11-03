@@ -1,53 +1,21 @@
 #!/usr/bin/env node
-// Generate ghost MDX files from evidence matrix data (Appendix B of spec).
+// Generate enriched ghost MDX files from verified facts.
 import { writeFileSync, mkdirSync } from 'node:fs';
-
-const GHOSTS = [
-  { name: 'Aswang', slug: 'aswang', number: 1, evidence: ['ghost-writing', 'freezing-temperatures', 'dots-projector'], forced: null },
-  { name: 'Banshee', slug: 'banshee', number: 2, evidence: ['dots-projector', 'ghost-orbs', 'ultraviolet'], forced: null },
-  { name: 'Dayan', slug: 'dayan', number: 3, evidence: ['emf-5', 'ghost-orbs', 'spirit-box'], forced: null },
-  { name: 'Deildegast', slug: 'deildegast', number: 4, evidence: ['emf-5', 'ghost-writing', 'dots-projector'], forced: null },
-  { name: 'Demon', slug: 'demon', number: 5, evidence: ['ultraviolet', 'ghost-writing', 'freezing-temperatures'], forced: null },
-  { name: 'Deogen', slug: 'deogen', number: 6, evidence: ['spirit-box', 'ghost-writing', 'dots-projector'], forced: 'spirit-box' },
-  { name: 'Gallu', slug: 'gallu', number: 7, evidence: ['emf-5', 'spirit-box', 'ultraviolet'], forced: null },
-  { name: 'Goryo', slug: 'goryo', number: 8, evidence: ['emf-5', 'ultraviolet', 'dots-projector'], forced: 'dots-projector' },
-  { name: 'Hantu', slug: 'hantu', number: 9, evidence: ['ultraviolet', 'ghost-orbs', 'freezing-temperatures'], forced: 'freezing-temperatures' },
-  { name: 'Jinn', slug: 'jinn', number: 10, evidence: ['emf-5', 'ultraviolet', 'freezing-temperatures'], forced: null },
-  { name: 'Kormos', slug: 'kormos', number: 11, evidence: ['ghost-orbs', 'spirit-box', 'ultraviolet'], forced: null },
-  { name: 'Mare', slug: 'mare', number: 12, evidence: ['spirit-box', 'ghost-orbs', 'ghost-writing'], forced: null },
-  { name: 'Moroi', slug: 'moroi', number: 13, evidence: ['spirit-box', 'ghost-writing', 'freezing-temperatures'], forced: 'spirit-box' },
-  { name: 'Myling', slug: 'myling', number: 14, evidence: ['emf-5', 'ultraviolet', 'ghost-writing'], forced: null },
-  { name: 'Obake', slug: 'obake', number: 15, evidence: ['emf-5', 'ultraviolet', 'ghost-orbs'], forced: 'ultraviolet' },
-  { name: 'Obambo', slug: 'obambo', number: 16, evidence: ['ultraviolet', 'ghost-writing', 'dots-projector'], forced: null },
-  { name: 'Oni', slug: 'oni', number: 17, evidence: ['emf-5', 'freezing-temperatures', 'dots-projector'], forced: null },
-  { name: 'Onryo', slug: 'onryo', number: 18, evidence: ['spirit-box', 'ghost-orbs', 'freezing-temperatures'], forced: null },
-  { name: 'Phantom', slug: 'phantom', number: 19, evidence: ['spirit-box', 'ultraviolet', 'dots-projector'], forced: null },
-  { name: 'Poltergeist', slug: 'poltergeist', number: 20, evidence: ['spirit-box', 'ultraviolet', 'ghost-writing'], forced: null },
-  { name: 'Raiju', slug: 'raiju', number: 21, evidence: ['emf-5', 'ghost-orbs', 'dots-projector'], forced: null },
-  { name: 'Revenant', slug: 'revenant', number: 22, evidence: ['ghost-orbs', 'ghost-writing', 'freezing-temperatures'], forced: null },
-  { name: 'Shade', slug: 'shade', number: 23, evidence: ['emf-5', 'ghost-writing', 'freezing-temperatures'], forced: null },
-  { name: 'Spirit', slug: 'spirit', number: 24, evidence: ['emf-5', 'spirit-box', 'ghost-writing'], forced: null },
-  { name: 'Thaye', slug: 'thaye', number: 25, evidence: ['ghost-orbs', 'ghost-writing', 'dots-projector'], forced: null },
-  { name: 'The Mimic', slug: 'the-mimic', number: 26, evidence: ['spirit-box', 'ultraviolet', 'freezing-temperatures'], forced: null, extra: ['ghost-orbs'] },
-  { name: 'The Twins', slug: 'the-twins', number: 27, evidence: ['emf-5', 'spirit-box', 'freezing-temperatures'], forced: null },
-  { name: 'Wraith', slug: 'wraith', number: 28, evidence: ['emf-5', 'spirit-box', 'dots-projector'], forced: null },
-  { name: 'Yokai', slug: 'yokai', number: 29, evidence: ['spirit-box', 'ghost-orbs', 'dots-projector'], forced: null },
-  { name: 'Yurei', slug: 'yurei', number: 30, evidence: ['ghost-orbs', 'freezing-temperatures', 'dots-projector'], forced: null },
-];
+import { GHOSTS } from './ghost-data.mjs';
 
 const labels = {
   'emf-5': 'EMF Level 5',
   'spirit-box': 'Spirit Box',
-  'ultraviolet': 'Ultraviolet',
+  ultraviolet: 'Ultraviolet',
   'ghost-orbs': 'Ghost Orbs',
   'ghost-writing': 'Ghost Writing',
   'freezing-temperatures': 'Freezing Temperatures',
   'dots-projector': 'D.O.T.S. Projector',
 };
 
-const evidenceLabel = (id) => labels[id] ?? id;
-
-const evidenceText = (ids) => ids.map(evidenceLabel).join(', ');
+const label = (id) => labels[id] ?? id;
+const list = (ids) => ids.map(label).join(', ');
+const q = JSON.stringify;
 
 const dir = 'src/content/ghosts';
 mkdirSync(dir, { recursive: true });
@@ -55,64 +23,98 @@ mkdirSync(dir, { recursive: true });
 const TODAY = new Date().toISOString();
 
 for (const g of GHOSTS) {
-  const forced = g.forced ? `Guaranteed evidence on reduced difficulties: **${evidenceLabel(g.forced)}**. ` : '';
-  const extra = g.extra ? `Extra evidence (always present): **${evidenceLabel(g.extra[0])}**. ` : '';
-  const tags = g.forced ? ['forced-evidence', ...(g.extra ? ['extra-evidence'] : [])] : (g.extra ? ['extra-evidence'] : []);
+  const forced = g.forced ? label(g.forced) : null;
+  const extra = g.extra ? label(g.extra) : null;
+  const aliases = g.name.startsWith('The ') ? [g.name.slice(4).toLowerCase()] : [];
+  const tags = [
+    ...(forced ? ['forced-evidence'] : []),
+    ...(extra ? ['extra-evidence'] : []),
+  ];
+  const wikiName = g.name.replace(/ /g, '_');
 
-  const aliases = [g.name.toLowerCase()];
-  if (g.name.includes(' ')) {
-    aliases.push(g.name.split(' ')[1].toLowerCase());
-  }
+  const evidenceSentence = `${g.name} can leave ${list(g.evidence)}.`;
+  const forcedSentence = forced ? ` On reduced-evidence difficulties, ${forced} is guaranteed to remain.` : '';
+  const extraSentence = extra ? ` It also always shows ${extra}, on top of its main evidence.` : '';
+
+  const tests = [
+    {
+      title: 'Confirm the evidence set',
+      detail: `Use the standard tools to verify each of ${list(g.evidence)}. Only a positive reading counts; a missing reading matters on normal difficulty.`,
+    },
+    {
+      title: 'Watch for the ability',
+      detail: g.ability,
+    },
+    {
+      title: 'Use the weakness',
+      detail: g.weakness,
+    },
+  ];
+
+  const faq = [
+    {
+      question: `What evidence does ${g.name} leave?`,
+      answer: `${evidenceSentence}${forcedSentence}${extraSentence}`.trim(),
+    },
+    {
+      question: `How do I identify ${g.name}?`,
+      answer: `Confirm ${list(g.evidence)}, then use behavior to separate it from ghosts that share that evidence. Its ability: ${g.ability} Its weakness: ${g.weakness}`,
+    },
+    {
+      question: `How fast is ${g.name}?`,
+      answer: `${g.speedNotes}${typeof g.huntSanity === 'number' ? ` Its hunt sanity threshold is ${g.huntSanity}%.` : ''}`,
+    },
+  ];
 
   const frontmatter = `---
-name: "${g.name}"
-slug: "${g.slug}"
+name: ${q(g.name)}
+slug: ${q(g.slug)}
 number: ${g.number}
-aliases: [${aliases.map(a => `"${a}"`).join(', ')}]
-evidence: [${g.evidence.map(id => `"${id}"`).join(', ')}]
-extraEvidence: [${g.extra ? [`"${g.extra[0]}"`] : []}]
-guaranteedEvidence: ${g.forced ? `"${g.forced}"` : 'null'}
-speedNotes: ""
-ability: ""
-weakness: ""
-tags: [${tags.map(t => `"${t}"`).join(', ')}]
+aliases: [${aliases.map(q).join(', ')}]
+evidence: [${g.evidence.map(q).join(', ')}]
+extraEvidence: [${g.extra ? q(g.extra) : ''}]
+guaranteedEvidence: ${g.forced ? q(g.forced) : 'null'}
+${typeof g.huntSanity === 'number' ? `huntSanity: ${g.huntSanity}\n` : ''}${typeof g.baseSpeed === 'number' ? `baseSpeed: ${g.baseSpeed}\n` : ''}speedNotes: ${q(g.speedNotes)}
+ability: ${q(g.ability)}
+weakness: ${q(g.weakness)}
+tags: [${tags.map(q).join(', ')}]
 idTests:
-  - title: "Confirm all three evidence types"
-    detail: "Use EMF Reader, Spirit Box, UV Light, Video Camera, Ghost Writing Book, Thermometer, and D.O.T.S. Projector to verify which of ${evidenceText(g.evidence)} appear."
+${tests.map((test) => `  - title: ${q(test.title)}\n    detail: ${q(test.detail)}`).join('\n')}
 faq:
-  - question: "What evidence does ${g.name} leave?"
-    answer: "${g.name} leaves ${evidenceText(g.evidence)}${extra}${forced}"
-  - question: "How do I identify ${g.name}?"
-    answer: "Gather ${evidenceText(g.evidence)} and compare against your journal. On reduced-evidence difficulties, ${forced || 'note which types are still visible'}."
-lastVerified: "${TODAY}"
+${faq.map((item) => `  - question: ${q(item.question)}\n    answer: ${q(item.answer)}`).join('\n')}
+lastVerified: ${q(TODAY)}
 sources:
-  - label: "Phasmophobia Wiki (Fandom) — Ghost"
-    url: "https://phasmophobia.fandom.com/wiki/Ghost"
+  - label: ${q(`Phasmophobia Wiki (Fandom) — ${g.name}`)}
+    url: ${q(`https://phasmophobia.fandom.com/wiki/${wikiName}`)}
   - label: "Phasmophobia Wiki (Fextralife) — Evidence Cheat Sheet"
     url: "https://phasmophobia.wiki.fextralife.com/Evidence_Cheat_Sheet"
 ---
 
-# ${g.name}
-
 ## Evidence
 
-${g.name} leaves **${evidenceText(g.evidence)}**. ${extra}${forced}
+${evidenceSentence}${forcedSentence}${extraSentence}
 
-## How to Identify
+## Tests that separate it
 
-Test each of the evidence types above systematically. Check ${evidenceText(g.evidence)} first, then rule out ghosts that don't match.
+${tests.map((test) => `**${test.title}.** ${test.detail}`).join('\n\n')}
 
-## Hunt Behavior
+## Behavior
 
-Each ghost has unique hunt behavior, speed, and sanity thresholds. Specific data for ${g.name} should be verified against current game data and added to this section.
+${g.ability} ${g.weakness}
+
+## Speed and hunt threshold
+
+${g.speedNotes}${typeof g.huntSanity === 'number' ? ` The base hunt sanity threshold is ${g.huntSanity}%.` : ''}
 
 ## Strategy
 
-Focus on evidence collection rather than guessing. Use your journal to track which evidence types you've confirmed, then cross-reference against remaining candidates.
+Treat the evidence set as the first filter, not the answer. Many ghosts share two or three evidence types, so confirm the full set before you commit. Once the evidence is locked in, use the ability and weakness above to separate the remaining candidates.
+
+On reduced-evidence difficulties, keep the guaranteed evidence in view and use the [evidence tracker](/tools/evidence-tracker/) to apply the difficulty rules automatically.
 
 ## Related
 
-View the [Evidence Cheat Sheet](/ghost-cheat-sheet/) to compare all ghosts side by side.
+Compare this entry with the [ghost cheat sheet](/ghost-cheat-sheet/) or open the [evidence tracker](/tools/evidence-tracker/) to narrow the hunt.
 `;
 
   writeFileSync(`${dir}/${g.slug}.mdx`, frontmatter);

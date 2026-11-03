@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { breadcrumbList, siteUrl } from '../lib/seo';
+
+const base = siteUrl(Astro.site);
+const description =
+  'Every DEAD AIR data correction and content update in one place: ghost evidence changes, new comparisons, tracker fixes, and full release notes.';
+const jsonLd = [
+  breadcrumbList([
+    { name: 'DEAD AIR', url: `${base}/` },
+    { name: 'Changelog', url: Astro.url.href },
+  ]),
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'DEAD AIR changelog',
+    description,
+    url: Astro.url.href,
+    isAccessibleForFree: true,
+  },
+];
+---
+
+<BaseLayout title="Changelog — Data Corrections & Updates | DEAD AIR" description={description} jsonLd={jsonLd}>
+  <section class="page-header">
+    <div class="container">
+      <p class="breadcrumb"><a href="/">DEAD AIR</a> / Changelog</p>
+      <h1>Changelog</h1>
+      <p class="lede">Data corrections, new pages, and tracker changes, newest first.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container prose">
+      <h2>3 November 2026</h2>
+      <ul>
+        <li>Verified all 30 ghost evidence sets, forced evidence, speeds, and hunt sanity thresholds.</li>
+        <li>Published seven evidence explainers and twelve head-to-head comparisons.</li>
+        <li>Rebuilt the evidence tracker with Nightmare, Insanity, and custom evidence rules.</li>
+        <li>Restricted fonts to Latin subsets to keep page weight down.</li>
+      </ul>
+      <h2>2 November 2026</h2>
+      <ul>
+        <li>Launched the DEAD AIR field guide: ghost index, cheat sheet, and tracker.</li>
+      </ul>
+    </div>
+  </section>
+</BaseLayout>

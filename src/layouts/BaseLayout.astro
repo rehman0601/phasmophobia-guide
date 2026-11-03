@@ -1,0 +1,101 @@
+---
+import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
+import monoLatin from '@fontsource/space-mono/files/space-mono-latin-400-normal.woff2?url';
+import '../styles/fonts.css';
+import '../styles/base.css';
+import { ogImagePath } from '../lib/seo';
+import Header from '../components/astro/Header.astro';
+import Footer from '../components/astro/Footer.astro';
+
+export interface Props {
+  title?: string;
+  description?: string;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  ogImage?: string;
+  noindex?: boolean;
+}
+
+const {
+  title = 'DEAD AIR — Phasmophobia Field Guide',
+  description = 'Fast, factual Phasmophobia ghost and evidence reference. Identify ghosts, test evidence, and narrow candidates with the evidence tracker.',
+  jsonLd,
+  ogImage,
+  noindex = false,
+} = Astro.props;
+
+const site = Astro.site ?? 'https://deadair.pages.dev';
+const canonical = noindex ? null : new URL(Astro.url.pathname, site);
+const socialImage = new URL(ogImage ?? ogImagePath(Astro.url.pathname), site);
+const jsonLdBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+const cfAnalyticsToken = import.meta.env.PUBLIC_CF_ANALYTICS_TOKEN || process.env.PUBLIC_CF_ANALYTICS_TOKEN;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DEAD AIR" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    <meta property="og:image" content={socialImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={title} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImage} />
+    <meta name="theme-color" content="#070907" />
+    {jsonLdBlocks.map((block) => (
+      <script type="application/ld+json" set:html={JSON.stringify(block)} />
+    ))}
+    <link rel="preload" href={interLatin} as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href={monoLatin} as="font" type="font/woff2" crossorigin />
+  </head>
+  <body>
+    <a href="#content" class="skip-link">Skip to content</a>
+    <Header />
+    <main id="content">
+      <slot />
+    </main>
+    <Footer />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      if (
+        !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
+        'IntersectionObserver' in window
+      ) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-in');
+                observer.unobserve(entry.target);
+              }
+            }
+          },
+          { threshold: 0.12 }
+        );
+        document.querySelectorAll('.section .container > *').forEach((el) => {
+          el.classList.add('reveal');
+          observer.observe(el);
+        });
+      }
+    </script>
+    {cfAnalyticsToken && (
+      <script
+        defer
+        src="https://static.cloudflareinsights.com/beacon.min.js"
+        data-cf-beacon={JSON.stringify({ token: cfAnalyticsToken })}
+      />
+    )}
+  </body>
+</html>

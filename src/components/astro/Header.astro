@@ -1,0 +1,270 @@
+---
+import { getCollection } from 'astro:content';
+import { ghostPath } from '../../lib/labels';
+
+export interface Props {
+  title?: string;
+}
+
+const ghosts = await getCollection('ghosts');
+const searchIndex = ghosts
+  .map((g) => ({
+    name: g.data.name,
+    slug: g.data.slug,
+    path: ghostPath(g.data.slug),
+    aliases: g.data.aliases || [],
+    evidence: g.data.evidence || [],
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+---
+
+<header class="site-header">
+  <div class="container">
+    <div class="header-content">
+      <a href="/" class="logo">
+        <span class="rec-dot" aria-hidden="true"></span>
+        <span class="logotype">DEAD AIR</span>
+      </a>
+
+      <div class="header-right">
+        <button
+          type="button"
+          class="header-search-btn"
+          id="open-search-btn"
+          aria-label="Search ghosts (Press / or Ctrl+K)"
+          title="Search ghosts (/)"
+        >
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <span class="search-placeholder">Search ghosts...</span>
+          <kbd class="search-kbd">/</kbd>
+        </button>
+
+        <button
+          type="button"
+          class="mobile-menu-btn"
+          id="mobile-menu-btn"
+          aria-label="Toggle navigation menu"
+          aria-expanded="false"
+          aria-controls="primary-nav"
+        >
+          <span class="menu-bar"></span>
+          <span class="menu-bar"></span>
+          <span class="menu-bar"></span>
+        </button>
+
+        <nav id="primary-nav" class="nav-links" aria-label="Primary">
+          <a href="/ghosts/">Ghosts</a>
+          <a href="/evidence/">Evidence</a>
+          <a href="/tools/evidence-tracker/">Tracker</a>
+          <a href="/ghost-cheat-sheet/">Cheat Sheet</a>
+          <a href="/about/">About</a>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <dialog id="search-dialog" class="search-dialog" aria-label="Search ghosts">
+    <div class="search-dialog-inner">
+      <div class="search-input-wrap">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          type="search"
+          id="ghost-search-input"
+          class="search-input"
+          aria-label="Search ghosts by name or alias"
+          placeholder="Type a ghost name or alias..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button type="button" id="close-search-btn" class="close-search-btn" aria-label="Close search">
+          <kbd>ESC</kbd>
+        </button>
+      </div>
+
+      <div class="search-results-wrap" role="region" aria-label="Search results" aria-live="polite">
+        <ul id="search-results-list" class="search-results-list" role="listbox"></ul>
+        <div id="search-empty-state" class="search-empty-state" hidden>
+          No matching ghosts found.
+        </div>
+      </div>
+    </div>
+  </dialog>
+</header>
+
+<script type="application/json" id="ghost-search-data" set:html={JSON.stringify(searchIndex)} />
+
+<script is:inline>
+  (function () {
+    const rawData = document.getElementById('ghost-search-data');
+    if (!rawData) return;
+    let ghosts = [];
+    try {
+      ghosts = JSON.parse(rawData.textContent || '[]');
+    } catch {
+      ghosts = [];
+    }
+
+    const openBtn = document.getElementById('open-search-btn');
+    const dialog = document.getElementById('search-dialog');
+    const closeBtn = document.getElementById('close-search-btn');
+    const input = document.getElementById('ghost-search-input');
+    const resultsList = document.getElementById('search-results-list');
+    const emptyState = document.getElementById('search-empty-state');
+    const mobileBtn = document.getElementById('mobile-menu-btn');
+    const nav = document.getElementById('primary-nav');
+
+    let activeIndex = -1;
+
+    function renderResults(filtered) {
+      if (!resultsList || !emptyState) return;
+      resultsList.innerHTML = '';
+      activeIndex = -1;
+
+      if (filtered.length === 0) {
+        emptyState.hidden = false;
+        return;
+      }
+      emptyState.hidden = true;
+
+      filtered.forEach((ghost, idx) => {
+        const li = document.createElement('li');
+        li.setAttribute('role', 'option');
+        li.id = `search-opt-${idx}`;
+        li.className = 'search-result-item';
+
+        const a = document.createElement('a');
+        a.href = ghost.path;
+        a.className = 'search-result-link';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'search-result-name';
+        nameSpan.textContent = ghost.name;
+
+        const metaSpan = document.createElement('span');
+        metaSpan.className = 'search-result-meta';
+        metaSpan.textContent = ghost.aliases.length > 0 ? ghost.aliases.join(', ') : '';
+
+        a.appendChild(nameSpan);
+        if (ghost.aliases.length > 0) a.appendChild(metaSpan);
+        li.appendChild(a);
+        resultsList.appendChild(li);
+      });
+    }
+
+    function openSearch() {
+      if (!dialog) return;
+      if (typeof dialog.showModal === 'function') {
+        dialog.showModal();
+      } else {
+        dialog.setAttribute('open', '');
+      }
+      renderResults(ghosts.slice(0, 8));
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    function closeSearch() {
+      if (!dialog) return;
+      if (typeof dialog.close === 'function') {
+        dialog.close();
+      } else {
+        dialog.removeAttribute('open');
+      }
+    }
+
+    openBtn?.addEventListener('click', openSearch);
+    closeBtn?.addEventListener('click', closeSearch);
+
+    dialog?.addEventListener('click', (e) => {
+      if (e.target === dialog) closeSearch();
+    });
+
+    input?.addEventListener('input', () => {
+      const q = input.value.trim().toLowerCase();
+      if (!q) {
+        renderResults(ghosts.slice(0, 8));
+        return;
+      }
+      const matched = ghosts.filter(
+        (g) =>
+          g.name.toLowerCase().includes(q) ||
+          g.aliases.some((a) => a.toLowerCase().includes(q))
+      );
+      renderResults(matched);
+    });
+
+    input?.addEventListener('keydown', (e) => {
+      const items = resultsList ? Array.from(resultsList.querySelectorAll('.search-result-item')) : [];
+      if (items.length === 0) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIndex = (activeIndex + 1) % items.length;
+        updateSelection(items);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIndex = (activeIndex - 1 + items.length) % items.length;
+        updateSelection(items);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeIndex >= 0 && items[activeIndex]) {
+          const link = items[activeIndex].querySelector('a');
+          if (link) window.location.href = link.href;
+        } else if (items[0]) {
+          const link = items[0].querySelector('a');
+          if (link) window.location.href = link.href;
+        }
+      }
+    });
+
+    function updateSelection(items) {
+      items.forEach((item, idx) => {
+        if (idx === activeIndex) {
+          item.classList.add('is-active');
+          item.setAttribute('aria-selected', 'true');
+          item.scrollIntoView({ block: 'nearest' });
+        } else {
+          item.classList.remove('is-active');
+          item.removeAttribute('aria-selected');
+        }
+      });
+    }
+
+    // Global keyboard shortcut: '/' or 'Cmd/Ctrl + K'
+    window.addEventListener('keydown', (e) => {
+      if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName || '')) {
+        e.preventDefault();
+        openSearch();
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (dialog?.open) {
+          closeSearch();
+        } else {
+          openSearch();
+        }
+      }
+    });
+
+    // Mobile nav toggle
+    mobileBtn?.addEventListener('click', () => {
+      const isOpen = nav?.classList.toggle('is-open');
+      mobileBtn.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    // Close mobile nav on link click
+    nav?.querySelectorAll('a').forEach((a) => {
+      a.addEventListener('click', () => {
+        nav.classList.remove('is-open');
+        mobileBtn?.setAttribute('aria-expanded', 'false');
+      });
+    });
+  })();
+</script>

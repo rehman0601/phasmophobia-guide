@@ -5,8 +5,8 @@
   --panel: #0E120D;
   --panel-raised: #141A13;
   --ink: #DFE5D4;
-  --muted: #93A085;
-  --faint: #5D6657;
+  --muted: #A2AE94;
+  --faint: #87927E;
   --line: rgba(223, 229, 212, 0.14);
   --line-strong: rgba(223, 229, 212, 0.28);
   --signal: #A3C979;
@@ -27,15 +27,15 @@
   --radius-lg: 12px;
 
   --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif;
+  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif;
 
-  --font-size-sm: 0.75rem;
-  --font-size-base: 0.875rem;
+  --font-size-sm: 0.8125rem;
+  --font-size-base: 1rem;
   --font-size-lg: 1rem;
   --font-size-xl: 1.125rem;
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 2rem;
-  --font-size-4xl: clamp(2.2rem, 5vw, 4rem);
+  --font-size-4xl: clamp(2.4rem, 6vw, 5.5rem);
 
   --line-height-tight: 1.2;
   --line-height-base: 1.7;

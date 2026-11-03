@@ -1,0 +1,117 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { EVIDENCE_IDS } from '../lib/schema';
+import { evidenceShort, ghostPath, formatDate } from '../lib/labels';
+import { articleSchema, breadcrumbList, siteUrl } from '../lib/seo';
+
+const ghosts = await getCollection('ghosts');
+const sortedGhosts = [...ghosts].sort((a, b) => a.data.number - b.data.number);
+const lastVerified = sortedGhosts.map((g) => g.data.lastVerified).sort().at(-1);
+
+const base = siteUrl(Astro.site);
+const description =
+  'One table with all 30 Phasmophobia ghosts and the seven evidence types. See which ghosts share evidence and which keep forced evidence on reduced difficulties.';
+const jsonLd = [
+  breadcrumbList([
+    { name: 'DEAD AIR', url: `${base}/` },
+    { name: 'Cheat sheet', url: Astro.url.href },
+  ]),
+  articleSchema({
+    headline: 'Phasmophobia Ghost Cheat Sheet — Evidence Matrix',
+    description,
+    dateModified: lastVerified,
+    url: Astro.url.href,
+  }),
+];
+---
+
+<BaseLayout
+  title="Phasmophobia Ghost Cheat Sheet — Evidence Matrix | DEAD AIR"
+  description={description}
+  jsonLd={jsonLd}
+>
+  <section class="page-header">
+    <div class="container">
+      <p class="breadcrumb"><a href="/">DEAD AIR</a> / Cheat sheet</p>
+      <h1>Ghost cheat sheet</h1>
+      <p class="lede">
+        The whole journal in one matrix. A filled cell means that ghost can leave that evidence.
+        The guaranteed column shows what stays visible on reduced-evidence difficulties.
+      </p>
+      {lastVerified && <p class="text-sm">Last verified {formatDate(lastVerified)}</p>}
+      <div class="hero-actions no-print" style="margin-top: var(--space-2);">
+        <button type="button" class="btn btn-secondary" onclick="window.print()">Print cheat sheet</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Ghost</th>
+              {EVIDENCE_IDS.map((id) => (
+                <th scope="col">{evidenceShort(id)}</th>
+              ))}
+              <th scope="col">Guaranteed</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedGhosts.map((ghost) => (
+              <tr>
+                <td>{String(ghost.data.number).padStart(2, '0')}</td>
+                <td>
+                  <a href={ghostPath(ghost.data.slug)}>{ghost.data.name}</a>
+                </td>
+                {EVIDENCE_IDS.map((id) => (
+                  <td class={ghost.data.evidence.includes(id) || ghost.data.extraEvidence.includes(id) ? 'yes' : 'no'}>
+                    {ghost.data.evidence.includes(id) || ghost.data.extraEvidence.includes(id) ? '●' : '·'}
+                  </td>
+                ))}
+                <td>
+                  {ghost.data.guaranteedEvidence
+                    ? evidenceShort(ghost.data.guaranteedEvidence)
+                    : '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="text-sm mt-2">
+        ● can leave this evidence · · cannot · Extra evidence from The Mimic is included in the matrix.
+      </p>
+    </div>
+  </section>
+
+  <section class="section no-print">
+    <div class="container">
+      <div class="grid grid-2">
+        <div class="panel">
+          <p class="label">Reading the matrix</p>
+          <h2>Narrow by columns</h2>
+          <p>
+            Find the evidence you have confirmed, then look down those columns. Every ghost marked
+            in all of them is still a candidate. Use the tracker to apply difficulty rules and rule
+            out evidence automatically.
+          </p>
+          <a class="btn btn-primary" href="/tools/evidence-tracker/">Open the tracker</a>
+        </div>
+        <div class="panel">
+          <p class="label">Reduced evidence</p>
+          <h2>Guaranteed stays visible</h2>
+          <p>
+            On Nightmare, Insanity, and custom reduced-evidence runs some evidence is hidden. Five
+            ghosts always keep one type: Hantu (Freezing), Goryo (D.O.T.S.), Obake (Ultraviolet),
+            Moroi (Spirit Box), and Deogen (Spirit Box).
+          </p>
+          <a href="/evidence/">Evidence guides</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

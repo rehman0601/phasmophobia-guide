@@ -1,0 +1,57 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { breadcrumbList, siteUrl } from '../../lib/seo';
+import { getCollection } from 'astro:content';
+import { comparisonPath } from '../../lib/labels';
+
+const comparisons = await getCollection('comparisons');
+const sorted = [...comparisons].sort((a, b) => a.data.title.localeCompare(b.data.title));
+
+const base = siteUrl(Astro.site);
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Phasmophobia Ghost Comparisons',
+    description: 'Side-by-side comparisons of commonly confused Phasmophobia ghosts.',
+    isAccessibleForFree: true,
+  },
+  breadcrumbList([
+    { name: 'DEAD AIR', url: `${base}/` },
+    { name: 'Compare', url: Astro.url.href },
+  ]),
+];
+---
+
+<BaseLayout
+  title="Phasmophobia Ghost Comparisons — Commonly Confused Pairs | DEAD AIR"
+  description="Side-by-side comparisons of commonly confused Phasmophobia ghosts: evidence overlap, speed, hunt sanity, and the tests that tell them apart."
+  jsonLd={jsonLd}
+>
+  <section class="page-header">
+    <div class="container">
+      <p class="breadcrumb"><a href="/">DEAD AIR</a> / Compare</p>
+      <h1>Ghost comparisons</h1>
+      <p class="lede">
+        Pairs that share evidence and get mistaken for each other. Each comparison lines up the
+        evidence sets, guaranteed evidence, speed, and hunt thresholds that break the tie.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="grid grid-2">
+        {sorted.map((item) => (
+          <a class="card" href={comparisonPath(item.id)}>
+            <div class="card-topline">
+              <span class="ghost-number">Head-to-head</span>
+            </div>
+            <h2>{item.data.title}</h2>
+            <p>{item.data.verdict}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>

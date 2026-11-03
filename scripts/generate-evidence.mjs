@@ -75,15 +75,16 @@ mkdirSync(dir, { recursive: true });
 const TODAY = new Date().toISOString();
 
 for (const e of EVIDENCE) {
+  const q = JSON.stringify;
   const forced = e.forcedBy.length > 0 ? `Guaranteed visible for: ${e.forcedBy.map(s => { const g = GHOSTS.find(x => x.slug === s); return g ? g.name : s; }).join(', ')}.` : '';
   const forcedSlugs = e.forcedBy.map(s => `"${s}"`).join(', ');
 
   const frontmatter = `---
-name: "${e.name}"
-slug: "${e.slug}"
-summary: "${e.summary}"
-howToTest: [${e.howToTest.map(t => `"${t}"`).join(', ')}]
-falsePositives: [${e.falsePositives.map(t => `"${t}"`).join(', ')}]
+name: ${q(e.name)}
+slug: ${q(e.slug)}
+summary: ${q(e.summary)}
+howToTest: [${e.howToTest.map(q).join(', ')}]
+falsePositives: [${e.falsePositives.map(q).join(', ')}]
 forcedBy: [${forcedSlugs}]
 lastVerified: "${TODAY}"
 sources:
@@ -92,8 +93,6 @@ sources:
   - label: "Phasmophobia Wiki (Fextralife) — Evidence Cheat Sheet"
     url: "https://phasmophobia.wiki.fextralife.com/Evidence_Cheat_Sheet"
 ---
-
-# ${e.name}
 
 ${e.summary}
 

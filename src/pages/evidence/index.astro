@@ -1,0 +1,83 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { breadcrumbList, siteUrl } from '../../lib/seo';
+import { getCollection } from 'astro:content';
+import { evidenceLabel, evidencePath } from '../../lib/labels';
+
+const evidenceList = await getCollection('evidence');
+const ghosts = await getCollection('ghosts');
+const sortedEvidence = [...evidenceList].sort((a, b) =>
+  evidenceLabel(a.data.slug).localeCompare(evidenceLabel(b.data.slug))
+);
+
+const countFor = (slug: string) =>
+  ghosts.filter((ghost) => ghost.data.evidence.includes(slug) || ghost.data.extraEvidence.includes(slug)).length;
+
+const base = siteUrl(Astro.site);
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Phasmophobia Evidence Types',
+    description: 'How to test each of the seven Phasmophobia evidence types, plus false positives and forced evidence.',
+    isAccessibleForFree: true,
+  },
+  breadcrumbList([
+    { name: 'DEAD AIR', url: `${base}/` },
+    { name: 'Evidence', url: Astro.url.href },
+  ]),
+];
+---
+
+<BaseLayout
+  title="Phasmophobia Evidence Types — Tests & False Positives | DEAD AIR"
+  description="Learn how to test all seven Phasmophobia evidence types, avoid false positives, and see which ghosts force each evidence on reduced difficulties."
+  jsonLd={jsonLd}
+>
+  <section class="page-header">
+    <div class="container">
+      <p class="breadcrumb"><a href="/">DEAD AIR</a> / Evidence</p>
+      <h1>Seven evidence types</h1>
+      <p class="lede">
+        Only one reading matters per tool. Learn what counts, what does not, and which ghosts keep
+        an evidence type on Nightmare, Insanity, and custom reduced-evidence runs.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="grid grid-2">
+        {sortedEvidence.map((item) => (
+          <a class="card" href={evidencePath(item.data.slug)}>
+            <div class="card-topline">
+              <span class="ghost-number">{countFor(item.data.slug)} ghosts</span>
+              {item.data.forcedBy.length > 0 && <span>Forced by {item.data.forcedBy.length}</span>}
+            </div>
+            <h2>{item.data.name}</h2>
+            <p>{item.data.summary}</p>
+            <div class="chip-row">
+              {item.data.forcedBy.map((slug) => (
+                <span class="chip" data-evidence={item.data.slug}>{slug.replace(/-/g, ' ')}</span>
+              ))}
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="panel-raised">
+        <h2>What counts as confirmed evidence?</h2>
+        <p>
+          In normal difficulty all three evidence types are available. On reduced-evidence
+          difficulties one or more types are hidden, and a small set of ghosts always keeps a
+          specific evidence type. Use the tracker to apply those rules automatically.
+        </p>
+        <a class="btn btn-primary" href="/tools/evidence-tracker/">Open the evidence tracker</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

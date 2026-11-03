@@ -1,0 +1,179 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { EVIDENCE_IDS } from '../lib/schema';
+import { evidenceLabel, evidencePath, ghostPath, comparisonPath, formatDate } from '../lib/labels';
+import { siteUrl } from '../lib/seo';
+
+const ghosts = await getCollection('ghosts');
+const evidence = await getCollection('evidence');
+const comparisons = await getCollection('comparisons');
+
+const sortedGhosts = [...ghosts].sort((a, b) => a.data.number - b.data.number);
+const sortedEvidence = [...evidence].sort((a, b) =>
+  evidenceLabel(a.data.slug).localeCompare(evidenceLabel(b.data.slug))
+);
+const featuredComparisons = comparisons.slice(0, 4);
+const lastVerified = sortedGhosts
+  .map((g) => g.data.lastVerified)
+  .sort()
+  .at(-1);
+
+const base = siteUrl(Astro.site);
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'DEAD AIR',
+    url: `${base}/`,
+    description:
+      'Phasmophobia ghost and evidence field guide with an interactive evidence tracker, ghost cheat sheet, and side-by-side comparisons.',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'VideoGame',
+    name: 'Phasmophobia',
+    url: 'https://www.kineticgames.co.uk/',
+    genre: 'Horror',
+    gamePlatform: ['PC', 'VR'],
+    publisher: { '@type': 'Organization', name: 'Kinetic Games' },
+  },
+];
+---
+
+<BaseLayout
+  title="DEAD AIR — Phasmophobia Ghost & Evidence Field Guide"
+  description="Identify every Phasmophobia ghost by evidence, speed, and hunt behavior. Use the evidence tracker, cheat sheet, and ghost comparisons to narrow the hunt."
+  jsonLd={jsonLd}
+>
+  <section class="hero">
+    <div class="container">
+      <p class="label">Unofficial field reference · 2026</p>
+      <h1>Know what is in the dark.</h1>
+      <p class="lede">
+        Every ghost, every evidence type, and the tests that separate them. No filler, no
+        guesswork. Track what you have found, rule out what you have not, and walk into the
+        investigation with a shortlist.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="/tools/evidence-tracker/">Open the evidence tracker</a>
+        <a class="btn" href="/ghosts/">Browse all 30 ghosts</a>
+      </div>
+      <div class="hero-meta">
+        <div><strong>{sortedGhosts.length}</strong>ghosts indexed</div>
+        <div><strong>{EVIDENCE_IDS.length}</strong>evidence types</div>
+        <div><strong>{comparisons.length}</strong>curated comparisons</div>
+        {lastVerified && <div><strong>{formatDate(lastVerified)}</strong>last verified</div>}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="flex justify-between items-center flex-wrap gap-2">
+        <h2>Start with the evidence</h2>
+        <a class="text-sm" href="/evidence/">All evidence guides</a>
+      </div>
+      <div class="grid grid-4">
+        {sortedEvidence.map((item) => (
+          <a class="card" href={evidencePath(item.data.slug)}>
+            <div class="card-topline">
+              <span class="ghost-number">{item.data.forcedBy.length > 0 ? 'Forced' : 'Standard'}</span>
+            </div>
+            <h3>{item.data.name}</h3>
+            <p>{item.data.summary}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="panel-raised">
+        <p class="label">Fast identification</p>
+        <h2>Cut the list before you enter</h2>
+        <p class="lede">
+          Select the evidence you have confirmed and the evidence you have ruled out. The tracker
+          applies difficulty rules, guaranteed evidence, and The Mimic's extra Ghost Orbs, then
+          returns only the ghosts that can still match.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="/tools/evidence-tracker/">Open the tracker</a>
+          <a class="btn" href="/ghost-cheat-sheet/">View the cheat sheet</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="flex justify-between items-center flex-wrap gap-2">
+        <h2>Ghosts in the journal</h2>
+        <a class="text-sm" href="/ghosts/">View all {sortedGhosts.length}</a>
+      </div>
+      <div class="grid grid-3">
+        {sortedGhosts.slice(0, 6).map((ghost) => (
+          <a class="card" href={ghostPath(ghost.data.slug)}>
+            <div class="card-topline">
+              <span class="ghost-number">Entry {String(ghost.data.number).padStart(2, '0')}</span>
+              {ghost.data.guaranteedEvidence && <span>Forced evidence</span>}
+            </div>
+            <h3>{ghost.data.name}</h3>
+            <div class="chip-row">
+              {ghost.data.evidence.map((id) => (
+                <span class="chip" data-evidence={id}>{evidenceLabel(id)}</span>
+              ))}
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="flex justify-between items-center flex-wrap gap-2">
+        <h2>Head-to-head</h2>
+        <a class="text-sm" href="/compare/">All comparisons</a>
+      </div>
+      <div class="grid grid-2">
+        {featuredComparisons.map((item) => (
+          <a class="card" href={comparisonPath(item.id)}>
+            <div class="card-topline">
+              <span class="ghost-number">Comparison</span>
+            </div>
+            <h3>{item.data.title}</h3>
+            <p>{item.data.verdict}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="grid grid-2">
+        <div class="panel">
+          <p class="label">Method</p>
+          <h2>Facts first</h2>
+          <p>
+            Evidence tables, guaranteed evidence, and hunt thresholds are checked against current
+            community references. Every page carries a verification date and its sources. Prose is
+            original; wiki text is never copied.
+          </p>
+          <a href="/about/">How DEAD AIR is built</a>
+        </div>
+        <div class="panel">
+          <p class="label">Corrections</p>
+          <h2>Something moved?</h2>
+          <p>
+            Phasmophobia patches change ghost behavior. If a value on this site no longer matches
+            your tests, the changelog records what changed and when.
+          </p>
+          <a href="/changelog/">Read the changelog</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,18 +1,12 @@
 {
+  "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
-    "target": "ES2026",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
     "paths": {
       "@/*": ["./src/*"]
-    },
-    "lib": ["ES2026", "DOM", "DOM.Iterable"]
+    }
   },
-  "include": ["src", "scripts", "tests"],
-  "exclude": ["node_modules", "dist", ".astro"]
+  "include": [".astro/types.d.ts", "src", "scripts", "tests"],
+  "exclude": ["dist", "node_modules"]
 }

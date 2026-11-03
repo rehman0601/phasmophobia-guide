@@ -1,0 +1,65 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { breadcrumbList, siteUrl } from '../lib/seo';
+
+const base = siteUrl(Astro.site);
+const description =
+  'How DEAD AIR verifies Phasmophobia ghost data, the sources behind every entry, our editorial standards, and how hunters can report a correction.';
+const jsonLd = [
+  breadcrumbList([
+    { name: 'DEAD AIR', url: `${base}/` },
+    { name: 'About', url: Astro.url.href },
+  ]),
+  {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    name: 'About DEAD AIR',
+    description,
+    url: Astro.url.href,
+    isAccessibleForFree: true,
+  },
+];
+---
+
+<BaseLayout title="About DEAD AIR — Sources, Method & Corrections | DEAD AIR" description={description} jsonLd={jsonLd}>
+  <section class="page-header">
+    <div class="container">
+      <p class="breadcrumb"><a href="/">DEAD AIR</a> / About</p>
+      <h1>About DEAD AIR</h1>
+      <p class="lede">
+        DEAD AIR is an unofficial Phasmophobia field guide built for hunters who want fast, factual
+        information without wading through ads and clutter.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container prose">
+      <h2>Method</h2>
+      <p>
+        All ghost evidence data is checked against the Phasmophobia Wiki (Fandom and Fextralife) and
+        PhasmoHelper. Every page carries a last-verified date and source links. Prose is written
+        originally; no verbatim wiki text is used.
+      </p>
+      <h2>Corrections</h2>
+      <p>
+        Phasmophobia changes between updates. If a value on this site disagrees with the current
+        game, treat the game as correct and send a correction with a screenshot or patch reference.
+        Verified corrections are listed in the <a href="/changelog/">changelog</a>.
+      </p>
+      <h2>Sources</h2>
+      <ul>
+        <li><a href="https://phasmophobia.fandom.com/wiki/Ghost">Phasmophobia Wiki (Fandom)</a></li>
+        <li><a href="https://phasmophobia.wiki.fextralife.com/Ghosts">Phasmophobia Wiki (Fextralife)</a></li>
+        <li><a href="https://phasmohelper.org/en/">PhasmoHelper</a></li>
+      </ul>
+      <h2>Privacy</h2>
+      <p>
+        The evidence tracker stores mode and evidence selections in your browser only. If analytics
+        are enabled, they are cookieless and aggregate. No account is required.
+      </p>
+      <h2>Affiliation</h2>
+      <p>This site is not affiliated with Kinetic Games or the official Phasmophobia game.</p>
+    </div>
+  </section>
+</BaseLayout>

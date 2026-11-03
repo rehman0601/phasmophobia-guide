@@ -36,8 +36,6 @@ sources:
     url: "https://phasmophobia.wiki.fextralife.com/Ghosts"
 ---
 
-# ${c.title}
-
 ${c.verdict}
 
 ## Shared Evidence

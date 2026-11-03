@@ -1,0 +1,278 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { evidenceLabel, evidencePath, ghostPath, comparisonPath, formatDate } from '../../lib/labels';
+import { articleSchema, breadcrumbList, ghostDescription, siteUrl } from '../../lib/seo';
+
+export async function getStaticPaths() {
+  const ghosts = await getCollection('ghosts');
+  return ghosts.map((ghost) => ({
+    params: { slug: ghost.data.slug },
+    props: { ghost },
+  }));
+}
+
+interface Props {
+  ghost: CollectionEntry<'ghosts'>;
+}
+
+const { ghost } = Astro.props;
+const data = ghost.data;
+const { Content } = await render(ghost);
+
+const allGhosts = await getCollection('ghosts');
+const comparisons = await getCollection('comparisons');
+
+const similar = allGhosts
+  .filter((other) => other.data.slug !== data.slug)
+  .map((other) => ({
+    ghost: other,
+    shared: other.data.evidence.filter((id) => data.evidence.includes(id)).length,
+  }))
+  .filter((item) => item.shared >= 2)
+  .sort((a, b) => b.shared - a.shared || a.ghost.data.number - b.ghost.data.number)
+  .slice(0, 4);
+
+const relatedComparisons = comparisons.filter(
+  (item) => item.data.ghostA === data.slug || item.data.ghostB === data.slug
+);
+
+const guaranteed = data.guaranteedEvidence ? evidenceLabel(data.guaranteedEvidence) : null;
+
+const base = siteUrl(Astro.site);
+const description = ghostDescription(
+  data.name,
+  data.evidence.map((id) => evidenceLabel(id))
+);
+const jsonLd: Record<string, unknown>[] = [
+  breadcrumbList([
+    { name: 'DEAD AIR', url: `${base}/` },
+    { name: 'Ghosts', url: `${base}/ghosts/` },
+    { name: data.name, url: Astro.url.href },
+  ]),
+  articleSchema({
+    headline: `${data.name} — Phasmophobia Evidence, Ability & Weakness`,
+    description,
+    dateModified: data.lastVerified,
+    url: Astro.url.href,
+  }),
+];
+---
+
+<BaseLayout
+  title={`${data.name} — Phasmophobia Evidence, Ability & Weakness | DEAD AIR`}
+  description={description}
+  jsonLd={jsonLd}
+>
+  <section class="page-header">
+    <div class="container">
+      <p class="breadcrumb">
+        <a href="/">DEAD AIR</a> / <a href="/ghosts/">Ghosts</a> / {data.name}
+      </p>
+      <div class="ghost-hero">
+        <div>
+          <span class="ghost-number">Journal entry {String(data.number).padStart(2, '0')}</span>
+          <h1>{data.name}</h1>
+          <p class="lede">
+            Evidence, speed, and identification tests for the {data.name} in Phasmophobia.
+            {data.aliases.length > 0 && `Also known as ${data.aliases.join(' or ')}.`}
+          </p>
+        </div>
+        <aside class="panel">
+          <p class="label">Evidence to confirm</p>
+          <div class="chip-row">
+            {data.evidence.map((id) => (
+              <a class="chip" data-evidence={id} href={evidencePath(id)}>{evidenceLabel(id)}</a>
+            ))}
+            {data.extraEvidence.map((id) => (
+              <span class="chip chip-extra" data-evidence={id}>Extra: {evidenceLabel(id)}</span>
+            ))}
+          </div>
+          <dl class="stat-row">
+            {guaranteed && (
+              <div class="stat">
+                <dt>Guaranteed</dt>
+                <dd>{guaranteed}</dd>
+              </div>
+            )}
+            {typeof data.baseSpeed === 'number' && (
+              <div class="stat">
+                <dt>Base speed</dt>
+                <dd>{data.baseSpeed} m/s</dd>
+              </div>
+            )}
+            {typeof data.huntSanity === 'number' && (
+              <div class="stat">
+                <dt>Hunt sanity</dt>
+                <dd>{data.huntSanity}%</dd>
+              </div>
+            )}
+          </dl>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="grid grid-2">
+        <div class="stack">
+          <div class="panel">
+            <p class="label">Identification</p>
+            <h2>How to confirm {data.name}</h2>
+            <p>
+              {data.name} will show {data.evidence.length} of the seven evidence types:
+              {' '}{data.evidence.map(evidenceLabel).join(', ')}.
+              {guaranteed && ` On reduced-evidence difficulties, ${guaranteed} is guaranteed to remain.`}
+            </p>
+            {data.idTests.length > 0 && (
+              <ol>
+                {data.idTests.map((test) => (
+                  <li>
+                    <strong>{test.title}</strong>
+                    <p class="muted">{test.detail}</p>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+
+          <div class="panel">
+            <p class="label">Behavior</p>
+            <h2>Ability and weakness</h2>
+            <h3>Ability</h3>
+            <p>{data.ability || 'Ability details are being verified against current game data.'}</p>
+            <h3>Weakness</h3>
+            <p>{data.weakness || 'Weakness details are being verified against current game data.'}</p>
+            <h3>Speed</h3>
+            <p>{data.speedNotes || 'Base speed and chase behavior are being verified against current game data.'}</p>
+          </div>
+        </div>
+
+        <aside class="stack">
+          <div class="panel-raised">
+            <p class="label">At a glance</p>
+            <dl class="stat-row">
+              {typeof data.baseSpeed === 'number' && (
+                <div class="stat">
+                  <dt>Base speed</dt>
+                  <dd>{data.baseSpeed} m/s</dd>
+                </div>
+              )}
+              {typeof data.huntSanity === 'number' && (
+                <div class="stat">
+                  <dt>Hunt sanity</dt>
+                  <dd>{data.huntSanity}%</dd>
+                </div>
+              )}
+              <div class="stat">
+                <dt>Evidence</dt>
+                <dd>{data.evidence.length}</dd>
+              </div>
+              <div class="stat">
+                <dt>Guaranteed</dt>
+                <dd>{guaranteed ?? 'None'}</dd>
+              </div>
+            </dl>
+            <div class="chip-row">
+              {data.tags.map((tag) => (
+                <span class="chip">{tag.replace(/-/g, ' ')}</span>
+              ))}
+            </div>
+          </div>
+
+          <div class="panel">
+            <p class="label">Verification</p>
+            <p class="text-sm">Last verified {formatDate(data.lastVerified)}</p>
+            <ul class="text-sm">
+              {data.sources.map((source) => (
+                <li><a href={source.url} rel="noopener noreferrer">{source.label}</a></li>
+              ))}
+            </ul>
+          </div>
+
+          {similar.length > 0 && (
+            <div class="panel">
+              <p class="label">Shares evidence</p>
+              <ul class="candidate-list">
+                {similar.map(({ ghost: other, shared }) => (
+                  <li>
+                    <span><a href={ghostPath(other.data.slug)}>{other.data.name}</a></span>
+                    <span class="text-sm">{shared} shared</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container ghost-content">
+      <div class="prose">
+        <Content />
+      </div>
+      <aside class="panel ghost-aside">
+        <p class="label">Quick reference</p>
+        <h2>Evidence links</h2>
+        <ul>
+          {data.evidence.map((id) => (
+            <li><a href={evidencePath(id)}>{evidenceLabel(id)}</a></li>
+          ))}
+        </ul>
+        <p class="label mt-3">Next step</p>
+        <p>Put the confirmed evidence into the tracker and see which ghosts remain.</p>
+        <a class="btn btn-primary" href="/tools/evidence-tracker/">Open the tracker</a>
+        <p class="label mt-3">Verification</p>
+        <p class="text-sm">Last verified {formatDate(data.lastVerified)}</p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container faq-layout">
+      <div>
+        <h2>Questions</h2>
+        <div class="faq">
+          {data.faq.map((item) => (
+            <details>
+              <summary>{item.question}</summary>
+              <p>{item.answer}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+      <aside class="panel">
+        <p class="label">Still stuck?</p>
+        <h2>Narrow the list</h2>
+        <p>Enter the evidence you have confirmed and rule out what the tools have excluded.</p>
+        <a class="btn btn-primary" href="/tools/evidence-tracker/">Open the evidence tracker</a>
+      </aside>
+    </div>
+  </section>
+
+  {relatedComparisons.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <h2>Compare {data.name}</h2>
+        <div class="grid grid-2">
+          {relatedComparisons.map((item) => (
+            <a class="card" href={comparisonPath(item.id)}>
+              <h3>{item.data.title}</h3>
+              <p>{item.data.verdict}</p>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section">
+    <div class="container flex justify-between items-center flex-wrap gap-2">
+      <a class="btn" href="/ghosts/">All ghosts</a>
+      <a class="btn btn-primary" href="/tools/evidence-tracker/">Narrow it down in the tracker</a>
+    </div>
+  </section>
+</BaseLayout>

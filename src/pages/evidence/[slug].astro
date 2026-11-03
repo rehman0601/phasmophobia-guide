@@ -1,0 +1,149 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { evidenceLabel, ghostPath, formatDate } from '../../lib/labels';
+import { articleSchema, breadcrumbList, evidenceDescription, siteUrl } from '../../lib/seo';
+
+export async function getStaticPaths() {
+  const evidence = await getCollection('evidence');
+  return evidence.map((item) => ({
+    params: { slug: item.data.slug },
+    props: { item },
+  }));
+}
+
+interface Props {
+  item: CollectionEntry<'evidence'>;
+}
+
+const { item } = Astro.props;
+const data = item.data;
+const { Content } = await render(item);
+
+const ghosts = await getCollection('ghosts');
+const forcedBy = ghosts
+  .filter((ghost) => ghost.data.guaranteedEvidence === data.slug)
+  .sort((a, b) => a.data.number - b.data.number);
+const carriers = ghosts
+  .filter((ghost) => ghost.data.evidence.includes(data.slug) || ghost.data.extraEvidence.includes(data.slug))
+  .sort((a, b) => a.data.number - b.data.number);
+const name = evidenceLabel(data.slug);
+
+const base = siteUrl(Astro.site);
+const description = evidenceDescription(name);
+const jsonLd: Record<string, unknown>[] = [
+  breadcrumbList([
+    { name: 'DEAD AIR', url: `${base}/` },
+    { name: 'Evidence', url: `${base}/evidence/` },
+    { name, url: Astro.url.href },
+  ]),
+  articleSchema({
+    headline: `${name} — Phasmophobia Evidence Guide`,
+    description,
+    dateModified: data.lastVerified,
+    url: Astro.url.href,
+  }),
+];
+---
+
+<BaseLayout
+  title={`${name} — Phasmophobia Evidence Guide | DEAD AIR`}
+  description={description}
+  jsonLd={jsonLd}
+>
+  <section class="page-header">
+    <div class="container">
+      <p class="breadcrumb">
+        <a href="/">DEAD AIR</a> / <a href="/evidence/">Evidence</a> / {name}
+      </p>
+      <h1>{name}</h1>
+      <p class="lede">{data.summary}</p>
+      <p class="text-sm">
+        {carriers.length} ghosts can produce it
+        {forcedBy.length > 0 && ` · Guaranteed for ${forcedBy.map((ghost) => ghost.data.name).join(', ')}`}
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="grid grid-2">
+        <div class="panel">
+          <p class="label">Test procedure</p>
+          <h2>How to test {name}</h2>
+          <ol>
+            {data.howToTest.map((step) => <li>{step}</li>)}
+          </ol>
+        </div>
+
+        <div class="panel">
+          <p class="label">Caution</p>
+          <h2>False positives</h2>
+          <ul>
+            {data.falsePositives.map((note) => <li>{note}</li>)}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="prose">
+        <Content />
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <h2>Ghosts that leave {name}</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Entry</th>
+              <th scope="col">Ghost</th>
+              <th scope="col">Evidence set</th>
+              <th scope="col">Guaranteed</th>
+            </tr>
+          </thead>
+          <tbody>
+            {carriers.map((ghost) => (
+              <tr>
+                <td>{String(ghost.data.number).padStart(2, '0')}</td>
+                <td><a href={ghostPath(ghost.data.slug)}>{ghost.data.name}</a></td>
+                <td>
+                  {ghost.data.evidence.map((id) => (
+                    <span class="chip" data-evidence={id}>{evidenceLabel(id)}</span>
+                  ))}
+                </td>
+                <td>
+                  {ghost.data.guaranteedEvidence === data.slug
+                    ? 'Yes'
+                    : ghost.data.guaranteedEvidence
+                      ? evidenceLabel(ghost.data.guaranteedEvidence)
+                      : '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="panel">
+        <p class="label">Verification</p>
+        <p class="text-sm">Last verified {formatDate(data.lastVerified)}</p>
+        <ul class="text-sm">
+          {data.sources.map((source) => (
+            <li><a href={source.url} rel="noopener noreferrer">{source.label}</a></li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

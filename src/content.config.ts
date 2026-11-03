@@ -1,4 +1,6 @@
-import { z, defineCollection } from 'astro:content';
+import { defineCollection } from 'astro:content';
+import { glob } from 'astro/loaders';
+import { z } from 'astro/zod';
 
 export type EvidenceId = 'emf-5' | 'spirit-box' | 'ultraviolet' | 'ghost-orbs' | 'ghost-writing' | 'freezing-temperatures' | 'dots-projector';
 
@@ -46,8 +48,17 @@ export const ComparisonSchema = z.object({
   sources: z.array(z.object({ label: z.string(), url: z.string().url() })),
 });
 
-const ghosts = defineCollection({ schema: GhostSchema });
-const evidence = defineCollection({ schema: EvidenceSchema });
-const comparisons = defineCollection({ schema: ComparisonSchema });
+const ghosts = defineCollection({
+  loader: glob({ pattern: '**/*.mdx', base: './src/content/ghosts' }),
+  schema: GhostSchema,
+});
+const evidence = defineCollection({
+  loader: glob({ pattern: '**/*.mdx', base: './src/content/evidence' }),
+  schema: EvidenceSchema,
+});
+const comparisons = defineCollection({
+  loader: glob({ pattern: '**/*.mdx', base: './src/content/comparisons' }),
+  schema: ComparisonSchema,
+});
 
 export const collections = { ghosts, evidence, comparisons };

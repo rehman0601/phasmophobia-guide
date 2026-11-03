@@ -1,0 +1,113 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { breadcrumbList, siteUrl } from '../../lib/seo';
+import { getCollection } from 'astro:content';
+import { EVIDENCE_IDS } from '../../lib/schema';
+import { evidenceLabel, ghostPath } from '../../lib/labels';
+
+const ghosts = await getCollection('ghosts');
+const sortedGhosts = [...ghosts].sort((a, b) => a.data.number - b.data.number);
+
+const base = siteUrl(Astro.site);
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'All Phasmophobia Ghosts',
+    description: 'Every Phasmophobia ghost with evidence types, forced evidence, and identification notes.',
+    isAccessibleForFree: true,
+  },
+  breadcrumbList([
+    { name: 'DEAD AIR', url: `${base}/` },
+    { name: 'Ghosts', url: Astro.url.href },
+  ]),
+];
+---
+
+<BaseLayout
+  title="All Phasmophobia Ghosts — Evidence & Behavior Index | DEAD AIR"
+  description="Browse all 30 Phasmophobia ghosts. Filter by evidence type, check forced evidence on reduced difficulties, and open each ghost's full identification guide."
+  jsonLd={jsonLd}
+>
+  <section class="page-header">
+    <div class="container">
+      <p class="breadcrumb"><a href="/">DEAD AIR</a> / Ghosts</p>
+      <h1>All ghosts</h1>
+      <p class="lede">
+        Thirty entities, seven evidence types, one journal. Filter the list by the evidence you
+        have confirmed, or scan the entries for forced evidence on reduced difficulties.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <h2>Ghost index</h2>
+      <div class="filter-bar">
+        <div class="field">
+          <label for="ghost-search">Search</label>
+          <input
+            type="search"
+            id="ghost-search"
+            placeholder="Name or alias"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </div>
+        <div class="field">
+          <label for="ghost-evidence">Evidence</label>
+          <select id="ghost-evidence">
+            <option value="">Any evidence</option>
+            {EVIDENCE_IDS.map((id) => (
+              <option value={id}>{evidenceLabel(id)}</option>
+            ))}
+          </select>
+        </div>
+        <div class="field">
+          <label for="ghost-filter">Show</label>
+          <select id="ghost-filter">
+            <option value="">All ghosts</option>
+            <option value="forced-evidence">Forced evidence only</option>
+            <option value="extra-evidence">Extra evidence only</option>
+          </select>
+        </div>
+        <p class="filter-count" aria-live="polite">
+          <span id="ghost-count">{sortedGhosts.length}</span> of {sortedGhosts.length} shown
+        </p>
+      </div>
+
+      <div class="grid grid-3" id="ghost-grid">
+        {sortedGhosts.map((ghost) => (
+          <a
+            class="card"
+            href={ghostPath(ghost.data.slug)}
+            data-name={`${ghost.data.name} ${ghost.data.aliases.join(' ')}`.toLowerCase()}
+            data-evidence={ghost.data.evidence.join(' ')}
+            data-tags={ghost.data.tags.join(' ')}
+          >
+            <div class="card-topline">
+              <span class="ghost-number">Entry {String(ghost.data.number).padStart(2, '0')}</span>
+              {ghost.data.guaranteedEvidence && <span>Forced</span>}
+            </div>
+            <h3>{ghost.data.name}</h3>
+            <div class="chip-row">
+              {ghost.data.evidence.map((id) => (
+                <span class="chip" data-evidence={id}>{evidenceLabel(id)}</span>
+              ))}
+              {ghost.data.extraEvidence.map((id) => (
+                <span class="chip chip-extra" data-evidence={id}>Extra: {evidenceLabel(id)}</span>
+              ))}
+            </div>
+          </a>
+        ))}
+      </div>
+      <p class="text-sm mt-3" id="ghost-empty" hidden>
+        No ghosts match those filters. Clear one filter and try again.
+      </p>
+    </div>
+  </section>
+
+  <script>
+    import '../../scripts/ghost-filter.js';
+  </script>
+</BaseLayout>

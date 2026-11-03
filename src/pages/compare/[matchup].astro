@@ -1,0 +1,136 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, getEntry, render, type CollectionEntry } from 'astro:content';
+import { evidenceLabel, ghostPath, formatDate } from '../../lib/labels';
+import { articleSchema, breadcrumbList, comparisonDescription, siteUrl } from '../../lib/seo';
+
+export async function getStaticPaths() {
+  const comparisons = await getCollection('comparisons');
+  return comparisons.map((item) => ({
+    params: { matchup: item.id },
+    props: { item },
+  }));
+}
+
+interface Props {
+  item: CollectionEntry<'comparisons'>;
+}
+
+const { item } = Astro.props;
+const data = item.data;
+const { Content } = await render(item);
+
+const ghostA = await getEntry('ghosts', data.ghostA);
+const ghostB = await getEntry('ghosts', data.ghostB);
+
+const base = siteUrl(Astro.site);
+const description = comparisonDescription(
+  ghostA?.data.name ?? data.title.split(' vs ')[0],
+  ghostB?.data.name ?? data.title.split(' vs ')[1] ?? ''
+);
+const jsonLd: Record<string, unknown>[] = [
+  breadcrumbList([
+    { name: 'DEAD AIR', url: `${base}/` },
+    { name: 'Compare', url: `${base}/compare/` },
+    { name: data.title, url: Astro.url.href },
+  ]),
+  articleSchema({
+    headline: `${data.title} — Phasmophobia Comparison`,
+    description,
+    dateModified: data.lastVerified,
+    url: Astro.url.href,
+  }),
+];
+
+const rows = ghostA && ghostB
+  ? [
+      { label: 'Evidence', a: ghostA.data.evidence.map(evidenceLabel).join(', '), b: ghostB.data.evidence.map(evidenceLabel).join(', ') },
+      { label: 'Extra evidence', a: ghostA.data.extraEvidence.map(evidenceLabel).join(', ') || 'None', b: ghostB.data.extraEvidence.map(evidenceLabel).join(', ') || 'None' },
+      { label: 'Guaranteed evidence', a: ghostA.data.guaranteedEvidence ? evidenceLabel(ghostA.data.guaranteedEvidence) : 'None', b: ghostB.data.guaranteedEvidence ? evidenceLabel(ghostB.data.guaranteedEvidence) : 'None' },
+      { label: 'Base speed', a: ghostA.data.baseSpeed ? `${ghostA.data.baseSpeed} m/s` : 'Under verification', b: ghostB.data.baseSpeed ? `${ghostB.data.baseSpeed} m/s` : 'Under verification' },
+      { label: 'Hunt sanity', a: ghostA.data.huntSanity ? `${ghostA.data.huntSanity}%` : 'Under verification', b: ghostB.data.huntSanity ? `${ghostB.data.huntSanity}%` : 'Under verification' },
+    ]
+  : [];
+---
+
+<BaseLayout
+  title={`${data.title} — Phasmophobia Comparison | DEAD AIR`}
+  description={description}
+  jsonLd={jsonLd}
+>
+  <section class="page-header">
+    <div class="container">
+      <p class="breadcrumb">
+        <a href="/">DEAD AIR</a> / <a href="/compare/">Compare</a> / {data.title}
+      </p>
+      <h1>{data.title}</h1>
+      <p class="lede">{data.verdict}</p>
+      <p class="text-sm">Last verified {formatDate(data.lastVerified)}</p>
+    </div>
+  </section>
+
+  {ghostA && ghostB && (
+    <section class="section">
+      <div class="container">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Attribute</th>
+                <th scope="col"><a href={ghostPath(ghostA.data.slug)}>{ghostA.data.name}</a></th>
+                <th scope="col"><a href={ghostPath(ghostB.data.slug)}>{ghostB.data.name}</a></th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr>
+                  <th scope="row">{row.label}</th>
+                  <td>{row.a}</td>
+                  <td>{row.b}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid grid-2 mt-3">
+          <a class="card" href={ghostPath(ghostA.data.slug)}>
+            <div class="card-topline">
+              <span class="ghost-number">Entry {String(ghostA.data.number).padStart(2, '0')}</span>
+            </div>
+            <h2>{ghostA.data.name}</h2>
+            <p>{ghostA.data.ability || 'Open the full entry for identification tests and behavior notes.'}</p>
+          </a>
+          <a class="card" href={ghostPath(ghostB.data.slug)}>
+            <div class="card-topline">
+              <span class="ghost-number">Entry {String(ghostB.data.number).padStart(2, '0')}</span>
+            </div>
+            <h2>{ghostB.data.name}</h2>
+            <p>{ghostB.data.ability || 'Open the full entry for identification tests and behavior notes.'}</p>
+          </a>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section">
+    <div class="container">
+      <div class="prose">
+        <Content />
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="panel">
+        <p class="label">Sources</p>
+        <ul class="text-sm">
+          {data.sources.map((source) => (
+            <li><a href={source.url} rel="noopener noreferrer">{source.label}</a></li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

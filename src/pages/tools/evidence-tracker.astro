@@ -1,0 +1,173 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Tracker from '../../components/islands/Tracker';
+import { getCollection } from 'astro:content';
+import { breadcrumbList, siteUrl } from '../../lib/seo';
+
+const ghosts = await getCollection('ghosts');
+const ghostInputs = [...ghosts]
+  .sort((a, b) => a.data.number - b.data.number)
+  .map((ghost) => ({
+    slug: ghost.data.slug,
+    name: ghost.data.name,
+    number: ghost.data.number,
+    evidence: ghost.data.evidence,
+    extraEvidence: ghost.data.extraEvidence,
+    guaranteedEvidence: ghost.data.guaranteedEvidence,
+  }));
+
+const base = siteUrl(Astro.site);
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'DEAD AIR Evidence Tracker',
+    applicationCategory: 'GameApplication',
+    operatingSystem: 'Any',
+    description:
+      'Narrow Phasmophobia ghost candidates by confirmed and ruled-out evidence across normal, nightmare, insanity, and custom difficulties.',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  },
+  breadcrumbList([
+    { name: 'DEAD AIR', url: `${base}/` },
+    { name: 'Evidence tracker', url: Astro.url.href },
+  ]),
+];
+---
+
+<BaseLayout
+  title="Phasmophobia Evidence Tracker — Narrow Ghost Candidates | DEAD AIR"
+  description="Interactive Phasmophobia evidence tracker. Select confirmed and ruled-out evidence, apply Nightmare or Insanity rules, and see which ghosts remain."
+  jsonLd={jsonLd}
+>
+  <section class="page-header">
+    <div class="container">
+      <p class="breadcrumb"><a href="/">DEAD AIR</a> / Tools / Evidence tracker</p>
+      <h1>Evidence tracker</h1>
+      <p class="lede">
+        Confirm what you have found, rule out what you have not, and let the difficulty rules
+        handle the rest. The tracker accounts for forced evidence and The Mimic's extra Ghost Orbs.
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <Tracker ghosts={ghostInputs} client:load />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="grid grid-3">
+        <div class="panel">
+          <p class="label">Normal</p>
+          <h2>Three evidence</h2>
+          <p>
+            All evidence types can appear. A tool that gives no reading is real information: use
+            the ruled-out state to remove ghosts that require it.
+          </p>
+        </div>
+        <div class="panel">
+          <p class="label">Nightmare and Insanity</p>
+          <h2>Reduced evidence</h2>
+          <p>
+            One or two evidence types are hidden. Ruled-out evidence stops mattering because
+            absence proves nothing, but forced evidence still appears for five ghosts.
+          </p>
+        </div>
+        <div class="panel">
+          <p class="label">Custom</p>
+          <h2>Zero to three</h2>
+          <p>
+            Set how many evidence types are shown. At zero, only behavior can identify the ghost,
+            and The Mimic still always shows Ghost Orbs.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container ghost-content">
+      <div class="prose">
+        <h2>How the candidate list works</h2>
+        <p>
+          Each ghost has three evidence types. On reduced difficulties, the game hides some of
+          them, so the tracker considers every combination the ghost could still show. A ghost
+          remains a candidate if all of your confirmed evidence fits one of those combinations.
+        </p>
+        <p>
+          Five ghosts keep a guaranteed evidence type: Hantu keeps Freezing Temperatures, Goryo
+          keeps D.O.T.S. Projector, Obake keeps Ultraviolet, and both Moroi and Deogen keep Spirit
+          Box. The Mimic is the exception on the other side: it always shows Ghost Orbs in addition
+          to its three main evidence types, even when the difficulty hides other evidence.
+        </p>
+        <h2>Reading the result</h2>
+        <p>
+          The list is a shortlist, not a verdict. Behavior, hunt speed, and ability tests still
+          separate ghosts that share evidence. Open any candidate to see its identification tests,
+          and use the <a href="/ghost-cheat-sheet/">cheat sheet</a> when you want the full matrix.
+        </p>
+      </div>
+      <aside class="panel ghost-aside">
+        <p class="label">Rules applied</p>
+        <h2>Difficulty checklist</h2>
+        <ul>
+          <li>Normal: all three evidence types, ruled-out readings count.</li>
+          <li>Nightmare: two shown, one hidden.</li>
+          <li>Insanity: one shown, two hidden.</li>
+          <li>Custom: zero to three shown.</li>
+          <li>Forced evidence stays visible for five ghosts.</li>
+          <li>The Mimic always adds Ghost Orbs.</li>
+        </ul>
+        <a class="btn mt-2" href="/ghost-cheat-sheet/">Open the cheat sheet</a>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container faq-layout">
+      <div>
+      <h2>Tracker questions</h2>
+      <div class="faq">
+        <details>
+          <summary>Does the tracker save my progress?</summary>
+          <p>
+            Yes. The current mode and evidence selections are stored in your browser and encoded in
+            the page URL, so you can bookmark or share a hunt.
+          </p>
+        </details>
+        <details>
+          <summary>Why can I not rule out evidence on Nightmare or Insanity?</summary>
+          <p>
+            Reduced difficulties hide evidence. A tool that shows nothing may simply have that
+            evidence hidden, so treating absence as proof would remove the correct ghost.
+          </p>
+        </details>
+        <details>
+          <summary>How does The Mimic appear?</summary>
+          <p>
+            The Mimic always shows Ghost Orbs on top of its three main evidence types. The tracker
+            adds those orbs automatically in every mode, including custom runs with zero main
+            evidence shown.
+          </p>
+        </details>
+        <details>
+          <summary>What if no ghosts remain?</summary>
+          <p>
+            Recheck each reading and the difficulty mode. A single mistaken ruled-out entry in
+            normal difficulty can eliminate the correct ghost.
+          </p>
+        </details>
+      </div>
+      </div>
+      <aside class="panel">
+        <p class="label">Before you commit</p>
+        <h2>Check the behavior</h2>
+        <p>Shared evidence creates shortlists, not verdicts. Open a candidate and verify its ability, hunt speed, and weakness.</p>
+        <a class="btn btn-primary" href="/ghosts/">Browse ghost entries</a>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>
