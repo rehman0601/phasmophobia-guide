@@ -1,20 +1,21 @@
-/* Design tokens — Cursed Tape theme for DEAD AIR */
+/* Haunted Tape theme for DEAD AIR */
 :root {
-  --bg-0: #070907;
-  --bg-1: #0B0E0A;
-  --panel: #0E120D;
-  --panel-raised: #141A13;
-  --ink: #DFE5D4;
-  --muted: #A2AE94;
-  --faint: #87927E;
-  --line: rgba(223, 229, 212, 0.14);
-  --line-strong: rgba(223, 229, 212, 0.28);
-  --signal: #A3C979;
-  --signal-bright: #C7EFA0;
-  --alarm: #C2564A;
-  --alarm-text: #E08A7E;
-  --tape: #B7A54E;
-  --focus: #C7EFA0;
+  --bg-0: #0a0a0d;
+  --bg-1: #14181c;
+  --panel: #1a1f24;
+  --panel-raised: #242a30;
+  --ink: #e8e6e3;
+  --muted: #7a8a9a;
+  --faint: #6b7a88;
+  --line: rgba(232, 230, 227, 0.08);
+  --line-strong: rgba(232, 230, 227, 0.16);
+  --signal: #9fd7a7;
+  --signal-bright: #c7f4cc;
+  --alarm: #e97a6e;
+  --alarm-text: #f5a09e;
+  --dust: #c9b49e;
+  --tbrown: #8b6b56;
+  --focus: #c7f4cc;
 
   --space: 8px;
   --space-2: 16px;
@@ -40,14 +41,64 @@
   --line-height-tight: 1.2;
   --line-height-base: 1.7;
 
-  --max-width: 1180px;
+  --max-width: 1200px;
 
-  --transition: 180ms ease;
+  --transition: 150ms ease;
 }
 
-/* Compact surface density scale */
-html {
-  font-size: 16px;
+/* Atmospheric overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(159, 215, 167, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(233, 122, 110, 0.03) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 256 256'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E");
+  z-index: -1;
+  opacity: 1;
+}
+
+/* Subtle paper texture for panels */
+@supports (background-blend-mode: overlay) {
+  .panel,
+  .panel-raised {
+    background-image:
+      linear-gradient(135deg, rgba(26, 31, 36, 0.8) 0%, rgba(26, 31, 36, 0.6) 100%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='40' height='40' fill='none'/%3E%3C/svg%3E");
+    background-size: 40px 40px, contain;
+  }
+}
+
+:root {
+  --space: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-6: 48px;
+
+  --radius: 8px;
+  --radius-sm: 4px;
+  --radius-lg: 12px;
+
+  --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif;
+
+  --font-size-sm: 0.8125rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1rem;
+  --font-size-xl: 1.125rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 2rem;
+  --font-size-4xl: clamp(2.4rem, 6vw, 5.5rem);
+
+  --line-height-tight: 1.2;
+  --line-height-base: 1.7;
+
+  --max-width: 1200px;
+
+  --transition: 150ms ease;
 }
 
 body {
@@ -61,11 +112,52 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+/* Ghost illustration header */
+.hero-ghost {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(159, 215, 167, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(233, 122, 110, 0.1) 0%, transparent 50%),
+    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
+  overflow: hidden;
+  margin: -1rem -1rem 2rem;
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+.ghost-silhouette {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--panel);
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: drift 20s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  100% { transform: translate(-50%, -50%) scale(1.05); }
+}
+
+.ghost-silhouette::before {
+  content: '';
+  position: absolute;
+  inset: 20px;
+  background: radial-gradient(circle at 30% 30%, var(--signal) 0%, transparent 50%);
+  opacity: 0.4;
+}
+
+h1 {
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+p {
+  line-height: var(--line-height-base);
 }

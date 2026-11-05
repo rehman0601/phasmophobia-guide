@@ -42,6 +42,16 @@ const jsonLd: Record<string, unknown>[] = [
   }),
 ];
 
+const EVIDENCE: { id: string; label: string }[] = [
+  { id: 'emf-5', label: 'EMF Level 5' },
+  { id: 'spirit-box', label: 'Spirit Box' },
+  { id: 'ultraviolet', label: 'Ultraviolet' },
+  { id: 'ghost-orbs', label: 'Ghost Orbs' },
+  { id: 'ghost-writing', label: 'Ghost Writing' },
+  { id: 'freezing-temperatures', label: 'Freezing Temperatures' },
+  { id: 'dots-projector', label: 'D.O.T.S. Projector' },
+];
+
 const rows = ghostA && ghostB
   ? [
       { label: 'Evidence', a: ghostA.data.evidence.map(evidenceLabel).join(', '), b: ghostB.data.evidence.map(evidenceLabel).join(', ') },
@@ -65,59 +75,73 @@ const rows = ghostA && ghostB
       </p>
       <h1>{data.title}</h1>
       <p class="lede">{data.verdict}</p>
-      <p class="text-sm">Last verified {formatDate(data.lastVerified)}</p>
-    </div>
-  </section>
+      <div class="dynamic-compare mt-3">
+        <h3>Filter by evidence</h3>
+        <div class="evidence-chip-row">
+          {EVIDENCE.map((item) => (
+            <button
+              type="button"
+              key={item.id}
+              class="evidence-chip"
+              data-evidence={item.id}
+              aria-pressed={false}
+              aria-label={`${item.label}: neutral`}
+              onClick={() => toggleEvidence(item.id)}
+            >
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          class="btn btn-sm mt-2"
+          onClick={() => openTrackerWithEvidence()}
+        >
+          Open in tracker with selected evidence
+        </button>
+      </div>
 
-  {ghostA && ghostB && (
-    <section class="section">
-      <div class="container">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Attribute</th>
-                <th scope="col"><a href={ghostPath(ghostA.data.slug)}>{ghostA.data.name}</a></th>
-                <th scope="col"><a href={ghostPath(ghostB.data.slug)}>{ghostB.data.name}</a></th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
+      <section class="section">
+        <div class="container">
+          <div class="table-wrap">
+            <table>
+              <thead>
                 <tr>
-                  <th scope="row">{row.label}</th>
-                  <td>{row.a}</td>
-                  <td>{row.b}</td>
+                  <th scope="col">Attribute</th>
+                  <th scope="col"><a href={ghostPath(ghostA.data.slug)}>{ghostA.data.name}</a></th>
+                  <th scope="col"><a href={ghostPath(ghostB.data.slug)}>{ghostB.data.name}</a></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr>
+                    <th scope="row">{row.label}</th>
+                    <td>{row.a}</td>
+                    <td>{row.b}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-        <div class="grid grid-2 mt-3">
-          <a class="card" href={ghostPath(ghostA.data.slug)}>
-            <div class="card-topline">
-              <span class="ghost-number">Entry {String(ghostA.data.number).padStart(2, '0')}</span>
-            </div>
-            <h2>{ghostA.data.name}</h2>
-            <p>{ghostA.data.ability || 'Open the full entry for identification tests and behavior notes.'}</p>
-          </a>
-          <a class="card" href={ghostPath(ghostB.data.slug)}>
-            <div class="card-topline">
-              <span class="ghost-number">Entry {String(ghostB.data.number).padStart(2, '0')}</span>
-            </div>
-            <h2>{ghostB.data.name}</h2>
-            <p>{ghostB.data.ability || 'Open the full entry for identification tests and behavior notes.'}</p>
-          </a>
+          <div class="grid grid-2 mt-3">
+            <a class="card" href={ghostPath(ghostA.data.slug)}>
+              <div class="card-topline">
+                <span class="ghost-number">Entry {String(ghostA.data.number).padStart(2, '0')}</span>
+              </div>
+              <h2>{ghostA.data.name}</h2>
+              <p>{ghostA.data.ability || 'Open the full entry for identification tests and behavior notes.'}</p>
+            </a>
+            <a class="card" href={ghostPath(ghostB.data.slug)}>
+              <div class="card-topline">
+                <span class="ghost-number">Entry {String(ghostB.data.number).padStart(2, '0')}</span>
+              </div>
+              <h2>{ghostB.data.name}</h2>
+              <p>{ghostB.data.ability || 'Open the full entry for identification tests and behavior notes.'}</p>
+            </a>
+          </div>
         </div>
-      </div>
-    </section>
-  )}
-
-  <section class="section">
-    <div class="container">
-      <div class="prose">
-        <Content />
-      </div>
+      </section>
     </div>
   </section>
 

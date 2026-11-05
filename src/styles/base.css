@@ -39,7 +39,7 @@ button:focus-visible {
   top: -100px;
   left: var(--space-2);
   background: var(--signal-bright);
-  color: #070907;
+  color: var(--bg-0);
   padding: var(--space);
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
@@ -129,7 +129,7 @@ button:focus-visible {
 }
 
 .btn:hover {
-  background: #1B2419;
+  background: var(--panel);
 }
 
 .btn-primary {
@@ -475,6 +475,7 @@ button:focus-visible {
   padding: var(--space-4) 0;
   color: var(--muted);
   font-size: var(--font-size-sm);
+  border-top: 1px solid var(--line);
 }
 
 .site-footer .container {
