@@ -928,11 +928,23 @@ select:focus {
   color: var(--signal-bright);
 }
 
+.evidence-toggle[data-state='found']:hover,
+.evidence-toggle[data-state='found']:focus-visible {
+  border-color: var(--signal-bright);
+  background: rgba(163, 201, 121, 0.2);
+}
+
 .evidence-toggle[data-state='ruled'] {
   border-color: var(--alarm);
   background: rgba(194, 86, 74, 0.1);
   color: var(--alarm-text);
   text-decoration: line-through;
+}
+
+.evidence-toggle[data-state='ruled']:hover,
+.evidence-toggle[data-state='ruled']:focus-visible {
+  border-color: var(--alarm-bright);
+  background: rgba(194, 86, 74, 0.18);
 }
 
 .evidence-toggle:disabled {

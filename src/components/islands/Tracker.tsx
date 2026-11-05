@@ -220,6 +220,11 @@ export default function Tracker({ ghosts }: Props) {
           {ruledEnabled
             ? 'Click once for found, twice to rule out. Absence counts as evidence at three shown.'
             : 'Ruled-out evidence is disabled below three shown — a missing evidence type proves nothing on reduced difficulties.'}
+          {shown >= 3 && !ruledEnabled && (
+            <span className="text-xs ml-1" title="Enable 'Custom' mode with 3+ shown to rule out evidence">
+              ⚙
+            </span>
+          )}
         </p>
       </div>
 

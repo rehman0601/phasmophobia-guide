@@ -120,6 +120,7 @@ const searchIndex = ghosts
     const nav = document.getElementById('primary-nav');
 
     let activeIndex = -1;
+    let reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     function renderResults(filtered) {
       if (!resultsList || !emptyState) return;
@@ -164,10 +165,14 @@ const searchIndex = ghosts
       } else {
         dialog.setAttribute('open', '');
       }
-      renderResults(ghosts.slice(0, 8));
+      if (reducedMotion) {
+        renderResults(ghosts.slice(0, 8));
+      } else {
+        requestAnimationFrame(() => renderResults(ghosts.slice(0, 8)));
+      }
       if (input) {
         input.value = '';
-        input.focus();
+        input.focus({ preventScroll: true });
       }
     }
 
@@ -190,7 +195,11 @@ const searchIndex = ghosts
     input?.addEventListener('input', () => {
       const q = input.value.trim().toLowerCase();
       if (!q) {
-        renderResults(ghosts.slice(0, 8));
+        if (reducedMotion) {
+          renderResults(ghosts.slice(0, 8));
+        } else {
+          requestAnimationFrame(() => renderResults(ghosts.slice(0, 8)));
+        }
         return;
       }
       const matched = ghosts.filter(
@@ -198,7 +207,11 @@ const searchIndex = ghosts
           g.name.toLowerCase().includes(q) ||
           g.aliases.some((a) => a.toLowerCase().includes(q))
       );
-      renderResults(matched);
+      if (reducedMotion) {
+        renderResults(matched);
+      } else {
+        requestAnimationFrame(() => renderResults(matched));
+      }
     });
 
     input?.addEventListener('keydown', (e) => {
@@ -250,6 +263,14 @@ const searchIndex = ghosts
         } else {
           openSearch();
         }
+      }
+    });
+
+    // Close on ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && dialog?.open) {
+        closeSearch();
+        if (input) input.focus();
       }
     });
 
