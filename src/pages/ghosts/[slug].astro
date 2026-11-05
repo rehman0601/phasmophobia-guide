@@ -224,6 +224,27 @@ const jsonLd: Record<string, unknown>[] = [
         </ul>
         <p class="label mt-3">Next step</p>
         <p>Put the confirmed evidence into the tracker and see which ghosts remain.</p>
+
+        <div class="quick-test mt-3">
+          <h3>Quick test</h3>
+          <p>Select the evidence you have confirmed to immediately narrow candidates:</p>
+          <div class="evidence-chip-row">
+            {['emf-5', 'spirit-box', 'ultraviolet', 'ghost-orbs', 'ghost-writing', 'freezing-temperatures', 'dots-projector'].map((id) => (
+              <button
+                type="button"
+                key={id}
+                class="evidence-chip quick-test-chip"
+                data-evidence={id}
+                aria-pressed={false}
+                aria-label={`${evidenceLabel(id)}: neutral`}
+                onClick={() => toggleQuickTest(id)}
+              >
+                <span>{evidenceLabel(id)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <a class="btn btn-primary" href="/tools/evidence-tracker/">Open the tracker</a>
         <p class="label mt-3">Verification</p>
         <p class="text-sm">Last verified {formatDate(data.lastVerified)}</p>
@@ -273,6 +294,43 @@ const jsonLd: Record<string, unknown>[] = [
     <div class="container flex justify-between items-center flex-wrap gap-2">
       <a class="btn" href="/ghosts/">All ghosts</a>
       <a class="btn btn-primary" href="/tools/evidence-tracker/">Narrow it down in the tracker</a>
+
+<script is:inline>
+  (function () {
+    const openBtn = document.querySelector('a[href="/tools/evidence-tracker"]');
+    const quickTestChips = document.querySelectorAll('.quick-test-chip');
+    let selectedEvidence = new Set();
+
+    function toggleQuickTest(id) {
+      if (selectedEvidence.has(id)) {
+        selectedEvidence.delete(id);
+      } else {
+        selectedEvidence.add(id);
+      }
+      quickTestChips.forEach((chip) => {
+        chip.setAttribute(
+          'aria-label',
+          `${chip.dataset.evidence}: ${selectedEvidence.has(chip.dataset.evidence) ? 'found' : 'neutral'}`
+        );
+      });
+    }
+
+    quickTestChips.forEach((chip) => {
+      chip.addEventListener('click', () => {
+        toggleQuickTest(chip.dataset.evidence);
+      });
+    });
+
+    if (openBtn) {
+      openBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const evidenceParam = Array.from(selectedEvidence).join(',');
+        const url = `/tools/evidence-tracker/?has=${encodeURIComponent(evidenceParam)}`;
+        window.location.href = url;
+      });
+    }
+  })();
+</script>
     </div>
   </section>
 </BaseLayout>
